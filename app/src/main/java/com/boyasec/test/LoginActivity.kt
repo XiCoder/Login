@@ -1,6 +1,7 @@
 package com.boyasec.test
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -10,13 +11,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -26,11 +26,25 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.ActivityNavigatorExtras
 import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.boyasec.test.data.Result
+import com.boyasec.test.data.RouteConfig
 import com.boyasec.test.extentions.isEmail
 import com.boyasec.test.ui.theme.LoginTestTheme
 import com.boyasec.test.ui.widget.StateButton
+import com.boyasec.test.viewmodels.LoginViewModel
+import com.boyasec.test.viewmodels.LoginViewModelFactory
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 
 /**
  * 登录界面
@@ -40,13 +54,29 @@ class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val navController = rememberNavController()
             LoginTestTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
                 ) {
-                    LoginPage(navController)
+                    val navController = rememberNavController()
+                    NavHost(
+                        navController = navController, startDestination = RouteConfig.ROUTE_LOGIN
+                    ) {
+                        composable(RouteConfig.ROUTE_LOGIN) { LoginPage(navController = navController) }
+                        composable(
+                            "${RouteConfig.ROUTE_MAIN}/{account}/{password}", arguments = listOf(
+                                navArgument("account") { type = NavType.StringType },
+                                navArgument("password") { type = NavType.StringType })
+                        ) {
+                            val account = it.arguments?.getString("account")
+                            val password = it.arguments?.getString("password")
+                            Greeting(
+                                name = account, password = password, navController = navController
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -56,9 +86,15 @@ class LoginActivity : ComponentActivity() {
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun LoginPage(navController: NavController) {
+
+    val composableScope = rememberCoroutineScope()
+
+    val loginViewModel = viewModel(
+        modelClass = LoginViewModel::class.java, factory = LoginViewModelFactory()
+    )
     Scaffold(topBar = {
         TopAppBar(title = {
-            Text(text = "登录")
+            Text(text = stringResource(id = R.string.login))
         }, navigationIcon = {
             IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
@@ -87,7 +123,6 @@ fun LoginPage(navController: NavController) {
                 val accountIsValid = remember {
                     mutableStateOf(true)
                 }
-
                 val showPassword = remember {
                     mutableStateOf(false)
                 }
@@ -158,6 +193,7 @@ fun LoginPage(navController: NavController) {
                     disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
                     disabledContentColor = MaterialTheme.colorScheme.onErrorContainer
                 )
+                val context = LocalContext.current
                 StateButton(text = stringResource(id = R.string.login),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -167,12 +203,29 @@ fun LoginPage(navController: NavController) {
                     colors = buttonColors,
                     onClick = {
                         keyboard?.hide()
+                        composableScope.launch {
+                            loginViewModel.login(accountText.value, passwordText.value)
+                                .collect { result ->
+                                    when (result) {
+                                        is Result.Success -> {
+                                            navController.navigate(
+                                                "${RouteConfig.ROUTE_MAIN}/${result.data.account}/${result.data.password}"
+                                            )
+                                        }
+                                        is Result.Error -> {
+                                            Toast.makeText(
+                                                context,
+                                                "Login failed error ${result.exception.localizedMessage}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                                }
+                        }
                     })
             }
         }
-
     }
-
 }
 
 @Preview(showBackground = true)
