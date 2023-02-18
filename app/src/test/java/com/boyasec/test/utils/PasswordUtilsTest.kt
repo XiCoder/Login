@@ -8,17 +8,35 @@ internal class PasswordUtilsTest {
 
     @Test
     fun checkPasswordLevel() {
-        assertThat(PasswordUtils.checkPasswordLevel("aaaaAA")).isInstanceOf(PasswordLevel.Easy::class.java)
+        // 密码长度小于6或者字符全部相等
         assertThat(PasswordUtils.checkPasswordLevel("aaaaaa")).isInstanceOf(PasswordLevel.Easy::class.java)
-        assertThat(PasswordUtils.checkPasswordLevel("123aaa")).isInstanceOf(PasswordLevel.Easy::class.java)
-        assertThat(PasswordUtils.checkPasswordLevel("123Aaaa")).isInstanceOf(PasswordLevel.Middle::class.java)
-        assertThat(PasswordUtils.checkPasswordLevel("132Aaaa")).isInstanceOf(PasswordLevel.Middle::class.java)
+        assertThat(PasswordUtils.checkPasswordLevel("111111111")).isInstanceOf(PasswordLevel.Easy::class.java)
+        assertThat(PasswordUtils.checkPasswordLevel("aaaaaaaaa")).isInstanceOf(PasswordLevel.Easy::class.java)
+        //纯字母
+        assertThat(PasswordUtils.checkPasswordLevel("afaasgg")).isInstanceOf(PasswordLevel.Easy::class.java)
+        //纯数字
+        assertThat(PasswordUtils.checkPasswordLevel("1275857")).isInstanceOf(PasswordLevel.Easy::class.java)
+        // 数字与字母组合连续
+        assertThat(PasswordUtils.checkPasswordLevel("123aa21")).isInstanceOf(PasswordLevel.Middle::class.java)
+        // 数字与字母组合包含大小写连续
+        assertThat(PasswordUtils.checkPasswordLevel("123Aaba")).isInstanceOf(PasswordLevel.Middle::class.java)
+        // 数字与字母组合包含大小写不连续,长度大于6
+        assertThat(PasswordUtils.checkPasswordLevel("132Aaba")).isInstanceOf(PasswordLevel.Strong::class.java)
+        // 数字与字母组合包含大小写连续，长度大于6
         assertThat(PasswordUtils.checkPasswordLevel("123Aaaa123")).isInstanceOf(PasswordLevel.Middle::class.java)
-        assertThat(PasswordUtils.checkPasswordLevel("123AaAa123")).isInstanceOf(PasswordLevel.Middle::class.java)
-        assertThat(PasswordUtils.checkPasswordLevel("123AaAa123@")).isInstanceOf(PasswordLevel.Strong::class.java)
-        assertThat(PasswordUtils.checkPasswordLevel("151Aa15681@")).isInstanceOf(PasswordLevel.Strong::class.java)
-        assertThat(PasswordUtils.checkPasswordLevel("AAAAAAAA")).isInstanceOf(PasswordLevel.Easy::class.java)
-        assertThat(PasswordUtils.checkPasswordLevel("aaaaAAAA")).isInstanceOf(PasswordLevel.Easy::class.java)
+        // 数字与字母组合包含大小写不连续，长度大于6
+        assertThat(PasswordUtils.checkPasswordLevel("143Aaba113")).isInstanceOf(PasswordLevel.Strong::class.java)
+        //数字与字母组合包含大小写不连续，长度大于12
+        assertThat(PasswordUtils.checkPasswordLevel("143AaAa143144")).isInstanceOf(PasswordLevel.Strong::class.java)
+        //数字与字母组合包含大小写不连续，长度大于6,特殊字符
+        assertThat(PasswordUtils.checkPasswordLevel("124Aa153@")).isInstanceOf(PasswordLevel.Strong::class.java)
+        //数字与字母组合包含大小写连续，长度大于6,特殊字符
+        assertThat(PasswordUtils.checkPasswordLevel("123Aa153@")).isInstanceOf(PasswordLevel.Strong::class.java)
+        //数字与字母组合包含大小写不连续，长度大于12,包含特殊字符
+        assertThat(PasswordUtils.checkPasswordLevel("151Aa15681@42")).isInstanceOf(PasswordLevel.VeryStrong::class.java)
+        //数字与字母组合包含大小写连续，长度大于12,包含特殊字符
+        assertThat(PasswordUtils.checkPasswordLevel("123Aa15681@42")).isInstanceOf(PasswordLevel.VeryStrong::class.java)
+
     }
 
     @Test
