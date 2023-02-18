@@ -19,6 +19,12 @@ enum class ButtonState {
     Normal, Loading
 }
 
+
+/**
+ * 带loading的button,click后有loading的效果
+ *
+ * @author Hey
+ */
 @Composable
 fun StateButton(
     text: String,
@@ -31,9 +37,7 @@ fun StateButton(
     border: BorderStroke? = null,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
-    state: MutableState<ButtonState> = remember {
-        mutableStateOf(ButtonState.Normal)
-    },
+    state: MutableState<ButtonState>
 ) {
     Button(
         onClick = {

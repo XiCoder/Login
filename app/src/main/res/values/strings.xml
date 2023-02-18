@@ -4,4 +4,11 @@
     <string name="password_label">密码</string>
     <string name="email_invalid">邮箱格式不正确</string>
     <string name="login">登录</string>
+    <string name="welcome">欢迎</string>
+    <string name="easy">简单</string>
+    <string name="middle">中等</string>
+    <string name="strong">强</string>
+    <string name="very_strong">非常强</string>
+    <string name="password_is_empty">密码为空</string>
+    <string name="welcome_password_tip">欢迎%s您的密码强度为%s</string>
 </resources>

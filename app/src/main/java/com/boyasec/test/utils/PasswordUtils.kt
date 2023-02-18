@@ -1,10 +1,10 @@
 package com.boyasec.test.utils
 
-
 sealed class PasswordLevel {
     object Easy : PasswordLevel()
     object Middle : PasswordLevel()
     object Strong : PasswordLevel()
+    object VeryStrong : PasswordLevel()
 }
 
 data class CheckResult(
@@ -15,10 +15,10 @@ data class CheckResult(
     var lowerSize: Int = 0,
     var upperSize: Int = 0,
     var otherSize: Int = 0,
+    // 字符全部相同
     var isAllEq: Boolean = true,
     // 连续数字|连续字母|连续键盘
     var isContinue: Boolean = false
-
 ) {
 
     fun isAllLetter(): Boolean {
@@ -28,7 +28,6 @@ data class CheckResult(
     fun isAllDigit(): Boolean {
         return length == numSize
     }
-
 
 }
 
@@ -48,12 +47,21 @@ object PasswordUtils {
     )
 
     /**
-     * 首先密码长度要大于6位
+     * 根据检查结果计算密码强度
+     * 密码强度规则：密码长度 +1
+     *             包含数字 +1
+     *             含字母 +1
+     *             包含特殊字符 +1
+     *             数字字母混合+1
+     *             大小写混合+1
+     *             存在连续字符-1
+     *
+     * @param password 密码
      */
     fun checkPasswordLevel(password: String): PasswordLevel {
-        val result = CheckResult(password)
+        val result = CheckResult(password).scanCheck().checkContinue()
         var level = 0
-        checkContainLetter(result)
+        // 长度小于Min或者字符全部相同直接返回Easy
         if (result.isAllEq || result.length < MIN_LENGTH) {
             return PasswordLevel.Easy
         }
@@ -93,33 +101,32 @@ object PasswordUtils {
             in 3..4 -> PasswordLevel.Middle
             in 5..6 -> PasswordLevel.Strong
             else -> {
-                PasswordLevel.Easy
+                PasswordLevel.VeryStrong
             }
         }
     }
 
 
     /**
-     * 检查密码中包含的字母个数
+     * 统计各种类型的个数
      */
-    private fun checkContainLetter(config: CheckResult): CheckResult {
-        var continueLetterFlag = false
-        var continueNumFlag = false
+    private fun CheckResult.scanCheck(): CheckResult {
+        val result = this.copy()
         var lastChar: Char? = null
         var allEqFlag = true
         var eqCount = 1
-        config.value.toCharArray().forEach {
+        result.value.toCharArray().forEach {
             if (it.isLetter()) {
-                config.letterSize++
+                this.letterSize++
                 if (it.isLowerCase()) {
-                    config.lowerSize++
+                    result.lowerSize++
                 } else {
-                    config.upperSize++
+                    result.upperSize++
                 }
             } else if (it.isDigit()) {
-                config.numSize++
+                result.numSize++
             } else {
-                config.otherSize++
+                result.otherSize++
             }
             // 检查是否存在连续相同数字
             lastChar?.let { last ->
@@ -129,25 +136,23 @@ object PasswordUtils {
                 } else {
                     eqCount++
                     if (eqCount >= MAX_CONTINUE_NUM) {
-                        config.isContinue = true
+                        result.isContinue = true
                     }
                 }
             }
             lastChar = it
         }
-        config.isAllEq = allEqFlag
-        config.length = config.value.length
-        return config
+        result.isAllEq = allEqFlag
+        result.length = result.value.length
+        return result
     }
+
 
     /**
-     * 检查密码是否包含小写字母
+     * 检查是否包含顺序字母、顺序数字、键盘顺序
      */
-    private fun checkContainLower(password: String): Int {
-        return password.toCharArray().count { it.isLetter().and(it.isLowerCase()) }
-    }
-
-    private fun checkContinue(result: CheckResult): CheckResult {
+    private fun CheckResult.checkContinue(): CheckResult {
+        val result = this.copy()
         if (result.length < MIN_LENGTH) {
             return result
         }

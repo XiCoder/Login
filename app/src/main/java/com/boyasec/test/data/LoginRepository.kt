@@ -1,10 +1,15 @@
 package com.boyasec.test.data
 
-import com.boyasec.test.User
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
+
+/**
+ * LoginRepository
+ *
+ * @author Hey
+ */
 class LoginRepository {
 
     suspend fun login(account: String, password: String): Flow<Result<User>> {

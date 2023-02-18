@@ -1,7 +1,7 @@
 package com.boyasec.test.viewmodels
 
 import androidx.lifecycle.ViewModel
-import com.boyasec.test.User
+import com.boyasec.test.data.User
 import com.boyasec.test.data.LoginRepository
 import com.boyasec.test.data.Result
 import kotlinx.coroutines.flow.Flow
