@@ -11,7 +11,7 @@ data class CheckResult(
     val value: String,
     var length: Int = 0,
     var letterSize: Int = 0,
-    var numSize: Int = 0,
+    var digitSize: Int = 0,
     var lowerSize: Int = 0,
     var upperSize: Int = 0,
     var otherSize: Int = 0,
@@ -26,7 +26,27 @@ data class CheckResult(
     }
 
     fun isAllDigit(): Boolean {
-        return length == numSize
+        return length == digitSize
+    }
+
+    fun containLetterAndDigit(): Boolean {
+        return letterSize > 0 && digitSize > 0
+    }
+
+    fun containUpperAndLower(): Boolean {
+        return upperSize > 0 && lowerSize > 0
+    }
+
+    fun containDigit(): Boolean {
+        return digitSize > 0
+    }
+
+    fun containLetter(): Boolean {
+        return letterSize > 0
+    }
+
+    fun containOther(): Boolean {
+        return otherSize > 0
     }
 
 }
@@ -72,23 +92,23 @@ object PasswordUtils {
             level++
         }
         // 含有数字
-        if (result.numSize > 0) {
+        if (result.containDigit()) {
             level++
         }
         // 含有字母
-        if (result.letterSize > 0) {
+        if (result.containLetter()) {
             level++
         }
         //含有特殊字符
-        if (result.otherSize > 0) {
+        if (result.containOther()) {
             level++
         }
         // 数字字母混合+1
-        if (!result.isAllDigit() && !result.isAllLetter()) {
+        if (result.containLetterAndDigit()) {
             level++
         }
         // 大小写混合+1
-        if (result.lowerSize > 0 && result.upperSize > 0) {
+        if (result.containUpperAndLower()) {
             level++
         }
         //存在连续字符-1
@@ -110,23 +130,22 @@ object PasswordUtils {
     /**
      * 统计各种类型的个数
      */
-    private fun CheckResult.scanCheck(): CheckResult {
-        val result = this.copy()
+    fun CheckResult.scanCheck(): CheckResult {
         var lastChar: Char? = null
         var allEqFlag = true
         var eqCount = 1
-        result.value.toCharArray().forEach {
+        this.value.toCharArray().forEach {
             if (it.isLetter()) {
                 this.letterSize++
                 if (it.isLowerCase()) {
-                    result.lowerSize++
+                    this.lowerSize++
                 } else {
-                    result.upperSize++
+                    this.upperSize++
                 }
             } else if (it.isDigit()) {
-                result.numSize++
+                this.digitSize++
             } else {
-                result.otherSize++
+                this.otherSize++
             }
             // 检查是否存在连续相同数字
             lastChar?.let { last ->
@@ -136,38 +155,37 @@ object PasswordUtils {
                 } else {
                     eqCount++
                     if (eqCount >= MAX_CONTINUE_NUM) {
-                        result.isContinue = true
+                        this.isContinue = true
                     }
                 }
             }
             lastChar = it
         }
-        result.isAllEq = allEqFlag
-        result.length = result.value.length
-        return result
+        this.isAllEq = allEqFlag
+        this.length = this.value.length
+        return this
     }
 
 
     /**
      * 检查是否包含顺序字母、顺序数字、键盘顺序
      */
-    private fun CheckResult.checkContinue(): CheckResult {
-        val result = this.copy()
-        if (result.length < MIN_LENGTH) {
-            return result
+    fun CheckResult.checkContinue(): CheckResult {
+        if (this.length < MIN_LENGTH) {
+            return this
         }
         var temp: String
         var offset: Int
         continueList.forEach { continueText ->
             offset = 0
-            for (i in MAX_CONTINUE_NUM..result.length) {
-                temp = result.value.substring(offset, i)
+            for (i in MAX_CONTINUE_NUM..this.length) {
+                temp = this.value.substring(offset, i)
                 if (continueText.contains(temp)) {
-                    result.isContinue = true
-                    return result
+                    this.isContinue = true
+                    return this
                 }
             }
         }
-        return result
+        return this
     }
 }
