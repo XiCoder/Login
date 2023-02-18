@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AppBar(
     title: String,
-    backgroundColor: Color = MaterialTheme.colorScheme.background,
-    titleColor: Color = MaterialTheme.colorScheme.onBackground,
+    backgroundColor: Color = MaterialTheme.colorScheme.primary,
+    titleColor: Color = MaterialTheme.colorScheme.onPrimary,
     navigationIcon: (@Composable () -> Unit)? = null,
     navigationClick: (() -> Unit)? = null,
 ) {

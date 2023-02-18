@@ -27,7 +27,7 @@ fun MainPage(name: String?, password: String?, navController: NavController) {
             Icon(
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "back",
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.onPrimary
             )
         }, navigationClick = { navController.popBackStack() })
 
